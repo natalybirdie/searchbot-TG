@@ -1,0 +1,35 @@
+import requests
+
+def get_crypto_price(token):
+    url = f'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids={token}'
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()[0]
+        name = data['name']
+        price = data['current_price']
+        return f'{name}: ${price:.2f}'
+    else:
+        return 'Error: Could not retrieve data.'
+
+# Replace YOUR_TOKEN with your Telegram bot token
+bot_token = 'YOUR_TOKEN'
+
+# Start the bot and wait for messages
+import telegram
+from telegram.ext import Updater, CommandHandler
+
+updater = Updater(token=bot_token, use_context=True)
+
+def start(update, context):
+    update.message.reply_text('Hello! Please enter a crypto token to get its current price.')
+
+def price(update, context):
+    token = context.args[0].lower()
+    message = get_crypto_price(token)
+    update.message.reply_text(message)
+
+updater.dispatcher.add_handler(CommandHandler('start', start))
+updater.dispatcher.add_handler(CommandHandler('price', price))
+
+updater.start_polling()
+updater.idle()
